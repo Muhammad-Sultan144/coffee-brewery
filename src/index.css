@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Space Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+/* Global Reset & Base Customizations */
+body {
+  margin: 0;
+  background-color: #0D0D0D;
+  color: #FFFFFF;
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+}
+
+/* Tailwind Focus outline overriding for Glaido */
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: #BFF549 !important;
+}
+
+/* Custom fade-in animations for Glaido's active tabs and elements */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

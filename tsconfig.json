@@ -15,5 +15,5 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["brand-identity/examples/**/*"]
+  "include": ["src/**/*", "brand-identity/examples/**/*"]
 }
