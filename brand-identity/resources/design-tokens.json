@@ -1,0 +1,45 @@
+{
+  "meta": {
+    "brand_name": "Glaido",
+    "description": "Official core design tokens for Glaido UI implementation."
+  },
+  "colors": {
+    "primary": {
+      "DEFAULT": "#BFF549",
+      "hover": "#A6D83F",
+      "foreground": "#0D0D0D"
+    },
+    "secondary": {
+      "DEFAULT": "transparent",
+      "border": "#252525",
+      "foreground": "#B6B6B6"
+    },
+    "accent": "#BFF549",
+    "background": "#0D0D0D",
+    "foreground": "#FFFFFF",
+    "muted": "#B6B6B6",
+    "border": "#252525",
+    "destructive": "#EF4444",
+    "success": "#10B981"
+  },
+  "typography": {
+    "font_family_headings": ["Aspekta", "ui-sans-serif", "system-ui", "sans-serif"],
+    "font_family_body": ["Aspekta", "ui-sans-serif", "system-ui", "sans-serif"],
+    "font_sizes": {
+      "h1": "76px",
+      "h2": "52px",
+      "body": "14px"
+    },
+    "font_weight_bold": "700",
+    "font_weight_normal": "400"
+  },
+  "ui": {
+    "border_radius_default": "0px",
+    "border_radius_buttons": "2px",
+    "spacing_base_unit": "4px"
+  },
+  "assets": {
+    "logo_svg": "resources/logo.svg",
+    "logo_png": "resources/logo.png"
+  }
+}
