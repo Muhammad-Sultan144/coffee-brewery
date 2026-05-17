@@ -8,10 +8,14 @@ import {
   Thermometer, 
   Sparkles,
   Zap,
-  ChevronRight
+  ChevronRight,
+  LogOut,
+  UserCheck
 } from 'lucide-react';
+import { supabase } from '../lib/supabaseClient';
 
 interface LandingPageProps {
+  user: any;
   onEnterPortal: () => void;
 }
 
@@ -57,11 +61,19 @@ const ROASTS_DATA: Record<CoffeeRoast, RoastSettings> = {
   }
 };
 
-export default function LandingPage({ onEnterPortal }: LandingPageProps) {
+export default function LandingPage({ user, onEnterPortal }: LandingPageProps) {
   const [selectedRoast, setSelectedRoast] = useState<CoffeeRoast>('geisha');
   const [simulateExtraction, setSimulateExtraction] = useState(false);
   const [extractionProgress, setExtractionProgress] = useState(0);
   const [activeYield, setActiveYield] = useState('0.0%');
+
+  // Auth States
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [authError, setAuthError] = useState('');
+  const [authSuccess, setAuthSuccess] = useState('');
 
   const startExtractionSimulation = () => {
     if (simulateExtraction) return;
@@ -86,6 +98,41 @@ export default function LandingPage({ onEnterPortal }: LandingPageProps) {
     }, 60);
   };
 
+  const handleAuthAction = async () => {
+    setAuthError('');
+    setAuthSuccess('');
+    
+    if (!email || !password) {
+      setAuthError('Error: Please complete all parameter fields.');
+      return;
+    }
+
+    try {
+      if (authMode === 'signin') {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        setAuthSuccess('Success: Barista key verified! Synced.');
+        setTimeout(() => {
+          setShowAuthModal(false);
+          setAuthSuccess('');
+          setEmail('');
+          setPassword('');
+        }, 1200);
+      } else {
+        const { error } = await supabase.auth.signUp({ email, password });
+        if (error) throw error;
+        setAuthSuccess('Success: Account created! Try logging in now.');
+        setAuthMode('signin');
+      }
+    } catch (err: any) {
+      setAuthError(`Error: ${err.message || 'Authentication calibration failure.'}`);
+    }
+  };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+  };
+
   const activeRoast = ROASTS_DATA[selectedRoast];
 
   return (
@@ -105,11 +152,33 @@ export default function LandingPage({ onEnterPortal }: LandingPageProps) {
           <span className="text-[#B6B6B6] text-xs uppercase tracking-widest font-mono">Espresso Lab</span>
         </div>
         
-        <div className="flex items-center gap-6">
-          <span className="text-xs font-mono font-bold text-[#BFF549] hidden md:flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#BFF549] animate-pulse" />
-            Vercel Synced
-          </span>
+        <div className="flex items-center gap-4 md:gap-6">
+          {user ? (
+            <div className="flex items-center gap-3">
+              <span className="text-[10px] font-mono text-[#BFF549] hidden md:flex items-center gap-1.5 bg-[#BFF549]/10 border border-[#BFF549]/20 px-2.5 py-1">
+                <UserCheck size={10} />
+                BARISTA: {user.email.length > 15 ? `${user.email.substring(0, 15)}...` : user.email}
+              </span>
+              <button 
+                onClick={handleSignOut}
+                className="bg-transparent text-red-400 border border-red-950 hover:border-red-900 font-bold text-xs px-3.5 py-2 rounded-[2px] transition-all flex items-center gap-1.5 cursor-pointer"
+              >
+                <LogOut size={12} />
+                <span className="hidden sm:inline">Logout</span>
+              </button>
+            </div>
+          ) : (
+            <button 
+              onClick={() => {
+                setAuthMode('signin');
+                setShowAuthModal(true);
+              }}
+              className="bg-transparent text-white border border-[#252525] hover:border-[#BFF549] font-bold text-xs px-4 py-2 rounded-[2px] transition-all cursor-pointer"
+            >
+              Sign In
+            </button>
+          )}
+
           <button 
             onClick={onEnterPortal}
             className="bg-[#BFF549] text-black font-bold text-xs px-5 py-2.5 rounded-[2px] hover:bg-[#A6D83F] active:scale-95 transition-all shadow-none flex items-center gap-2 cursor-pointer"
@@ -130,8 +199,31 @@ export default function LandingPage({ onEnterPortal }: LandingPageProps) {
 
         <div className="w-full max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 items-center z-10">
           
-          {/* Left Column: Copy */}
+          {/* Left Column: Copy & Design Overlay */}
           <div className="lg:col-span-7 flex flex-col gap-6 text-left">
+            
+            {/* Visual Inspiration PNG overlay as a stunning top column card */}
+            <div className="relative group overflow-hidden border border-[#252525] bg-[#0A0A0A] aspect-video w-full mb-2">
+              <div className="absolute top-0 left-0 w-2.5 h-2.5 border-t-2 border-l-2 border-[#BFF549] z-20" />
+              <div className="absolute top-0 right-0 w-2.5 h-2.5 border-t-2 border-r-2 border-[#BFF549] z-20" />
+              <div className="absolute bottom-0 left-0 w-2.5 h-2.5 border-b-2 border-l-2 border-[#BFF549] z-20" />
+              <div className="absolute bottom-0 right-0 w-2.5 h-2.5 border-b-2 border-r-2 border-[#BFF549] z-20" />
+              
+              <img 
+                src="/brand-identity/resources/visual-inspiration.png" 
+                alt="Glaido Visual Paradigm"
+                className="w-full h-full object-cover filter brightness-[0.7] contrast-[1.1] grayscale hover:grayscale-0 group-hover:scale-102 transition-all duration-700 ease-in-out"
+              />
+              
+              {/* Overlay label */}
+              <div className="absolute bottom-3 left-3 bg-[#0D0D0D]/90 backdrop-blur-sm border border-[#252525] px-3 py-1.5 z-10">
+                <span className="text-[10px] font-mono font-bold text-[#BFF549] uppercase tracking-wider flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 bg-[#BFF549] animate-pulse rounded-full" />
+                  00 / Design Paradigm Calibration
+                </span>
+              </div>
+            </div>
+
             <span className="text-[#BFF549] text-xs font-bold uppercase tracking-widest font-mono bg-[#BFF549]/10 px-3 py-1.5 border border-[#BFF549]/20 self-start">
               Extraction Performance Redefined
             </span>
@@ -443,6 +535,88 @@ export default function LandingPage({ onEnterPortal }: LandingPageProps) {
           </div>
         </div>
       </footer>
+
+      {/* Barista Authentication Modal */}
+      {showAuthModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[999] px-4">
+          <div className="bg-[#121212] border border-[#252525] p-6 max-w-sm w-full relative">
+            <div className="absolute top-0 left-0 w-2 h-2 border-t border-l border-[#BFF549]" />
+            <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-[#BFF549]" />
+            <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-[#BFF549]" />
+            <div className="absolute bottom-0 right-0 w-2 h-2 border-b border-r border-[#BFF549]" />
+            
+            <div className="flex justify-between items-center border-b border-[#252525] pb-4 mb-6">
+              <span className="text-xs font-mono font-bold uppercase text-[#B6B6B6] flex items-center gap-1.5">
+                <Coffee size={12} className="text-[#BFF549]" />
+                {authMode === 'signin' ? 'Barista Authentication' : 'Create Glaido Account'}
+              </span>
+              <button 
+                onClick={() => {
+                  setShowAuthModal(false);
+                  setAuthError('');
+                  setAuthSuccess('');
+                }}
+                className="text-[#B6B6B6] hover:text-white text-xs font-mono cursor-pointer"
+              >
+                [ESC] CLOSE
+              </button>
+            </div>
+
+            {authError && (
+              <div className="bg-red-950/20 border border-red-800 text-red-400 text-xs font-mono p-3 mb-4 text-left">
+                {authError}
+              </div>
+            )}
+            {authSuccess && (
+              <div className="bg-green-950/20 border border-[#BFF549] text-[#BFF549] text-xs font-mono p-3 mb-4 text-left">
+                {authSuccess}
+              </div>
+            )}
+
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-1 text-left">
+                <label className="text-[#B6B6B6] text-[9px] uppercase font-bold tracking-widest font-mono">Barista Email</label>
+                <input 
+                  type="email" 
+                  placeholder="name@glaido.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="bg-[#080808] border border-[#252525] text-white text-sm p-3 focus:outline-none focus:border-[#BFF549] rounded-none font-mono"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1 text-left">
+                <label className="text-[#B6B6B6] text-[9px] uppercase font-bold tracking-widest font-mono">Access Cryptokey</label>
+                <input 
+                  type="password" 
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="bg-[#080808] border border-[#252525] text-white text-sm p-3 focus:outline-none focus:border-[#BFF549] rounded-none font-mono"
+                />
+              </div>
+
+              <button 
+                onClick={handleAuthAction}
+                className="bg-[#BFF549] text-black font-bold text-xs uppercase tracking-wider py-3 rounded-[2px] hover:bg-[#A6D83F] transition-all cursor-pointer mt-2"
+              >
+                {authMode === 'signin' ? 'Sync Barista Keys' : 'Register Operator'}
+              </button>
+
+              <div className="text-center mt-2">
+                <button 
+                  onClick={() => setAuthMode(authMode === 'signin' ? 'signup' : 'signin')}
+                  className="text-[10px] font-mono text-[#B6B6B6] hover:text-[#BFF549] transition-colors cursor-pointer bg-transparent border-none"
+                >
+                  {authMode === 'signin' 
+                    ? "Need a new account? Register operator" 
+                    : "Already registered? Login operator"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

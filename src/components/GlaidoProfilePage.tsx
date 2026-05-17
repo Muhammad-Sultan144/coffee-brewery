@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Settings, 
   Clock, 
@@ -10,15 +10,20 @@ import {
   Thermometer, 
   Sparkles,
   ArrowRight,
-  Coffee
+  Coffee,
+  Calculator,
+  User,
+  History,
+  Lock,
+  UserCheck
 } from 'lucide-react';
+import { supabase } from '../lib/supabaseClient';
 
-// Props for the profile page
 interface GlaidoProfilePageProps {
+  user: any;
   onBack: () => void;
 }
 
-// Stats Card shape
 interface StatsCardProps {
   icon: React.ReactNode;
   label: string;
@@ -26,25 +31,155 @@ interface StatsCardProps {
   change: string;
 }
 
-// Integration Row shape
 interface IntegrationRowProps {
   name: string;
   desc: string;
   connected: boolean;
 }
 
-export default function GlaidoProfilePage({ onBack }: GlaidoProfilePageProps) {
-  const [activeTab, setActiveTab] = useState<'profile' | 'usage' | 'integrations'>('profile');
-  const [profileName, setProfileName] = useState('ANC');
-  const [profileEmail, setProfileEmail] = useState('coffee.enthusiast@glaido.com');
+interface BaristaCalculation {
+  id: string;
+  weight: number;
+  coffee_cups: number;
+  activity_level: string;
+  calories_burn: number;
+  caffeine_level: number;
+  gear_recommendation: string;
+  created_at: string;
+}
+
+export default function GlaidoProfilePage({ user, onBack }: GlaidoProfilePageProps) {
+  const [activeTab, setActiveTab] = useState<'profile' | 'usage' | 'integrations' | 'calculator'>('profile');
+  const [profileName, setProfileName] = useState(user ? user.email.split('@')[0].toUpperCase() : 'ANC');
+  const [profileEmail, setProfileEmail] = useState(user ? user.email : 'coffee.enthusiast@glaido.com');
   const [targetTemp, setTargetTemp] = useState<number>(93); // Celsius
   const [brewMethod, setBrewMethod] = useState('Espresso (declining pressure)');
   const [isSaved, setIsSaved] = useState(false);
+
+  // Calorie & Gear-Up Calculator States
+  const [weight, setWeight] = useState<number>(75);
+  const [cups, setCups] = useState<number>(3);
+  const [activity, setActivity] = useState<string>('active');
+  const [computedCalories, setComputedCalories] = useState<number>(0);
+  const [computedCaffeine, setComputedCaffeine] = useState<number>(0);
+  const [gearRecommendation, setGearRecommendation] = useState<string>('');
+  const [calculationSuccess, setCalculationSuccess] = useState<boolean>(false);
+  const [calcHistory, setCalcHistory] = useState<BaristaCalculation[]>([]);
+
+  // Inline Login States (if accessed when logged out)
+  const [inlineEmail, setInlineEmail] = useState('');
+  const [inlinePassword, setInlinePassword] = useState('');
+  const [inlineError, setInlineError] = useState('');
+
+  // Handle profile names updating dynamically when user signs in or out
+  useEffect(() => {
+    if (user) {
+      setProfileName(user.email.split('@')[0].toUpperCase());
+      setProfileEmail(user.email);
+    } else {
+      setProfileName('ANC');
+      setProfileEmail('coffee.enthusiast@glaido.com');
+    }
+  }, [user]);
+
+  // Load calculation history when tab is opened and user is logged in
+  useEffect(() => {
+    if (activeTab === 'calculator' && user) {
+      fetchCalculationHistory();
+    }
+  }, [activeTab, user]);
+
+  const fetchCalculationHistory = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('barista_calculations')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      setCalcHistory(data || []);
+    } catch (err: any) {
+      console.error('Error fetching calculation telemetry:', err.message);
+    }
+  };
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSaved(true);
     setTimeout(() => setIsSaved(false), 3000);
+  };
+
+  // Perform metabolism math and log to Supabase
+  const handleCalculateAndLog = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCalculationSuccess(false);
+
+    // Dynamic Barista Calorie Burn Math
+    // Base metabolic rate (approx): Weight * 24
+    let multiplier = 1.2; // Sedentary
+    if (activity === 'active') multiplier = 1.45;
+    if (activity === 'peak') multiplier = 1.75;
+    if (activity === 'overclocked') multiplier = 2.1;
+
+    let calBurn = Math.round(weight * 24 * multiplier);
+    // Dynamic Caffeine Caloric Boost: Each cup of coffee boosts metabolism by 50 calories
+    calBurn += cups * 50;
+
+    // Caffeine levels (approx 100mg per cup)
+    const activeCaff = cups * 100;
+
+    // Gear recommendations based on caffeine profile
+    let gearRec = "Glaido Standard Brewing Station & Refractometer Link";
+    if (cups >= 3 && cups <= 4) {
+      gearRec = "Decent DE1 Pressure Profiler & Acaia Lunar Calibration Setup";
+    } else if (cups >= 5) {
+      gearRec = "Obsidian Overclocked Triple Multiplex Induction System";
+    }
+
+    setComputedCalories(calBurn);
+    setComputedCaffeine(activeCaff);
+    setGearRecommendation(gearRec);
+    setCalculationSuccess(true);
+
+    if (user) {
+      try {
+        const { error } = await supabase.from('barista_calculations').insert([
+          {
+            user_id: user.id,
+            weight: Number(weight),
+            coffee_cups: Number(cups),
+            activity_level: activity,
+            calories_burn: calBurn,
+            caffeine_level: activeCaff,
+            gear_recommendation: gearRec
+          }
+        ]);
+        if (error) throw error;
+        // Refresh calculation log list
+        fetchCalculationHistory();
+      } catch (err: any) {
+        console.error('Error logging to Supabase:', err.message);
+      }
+    }
+  };
+
+  const handleInlineLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setInlineError('');
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: inlineEmail,
+        password: inlinePassword
+      });
+      if (error) throw error;
+      setInlineEmail('');
+      setInlinePassword('');
+    } catch (err: any) {
+      setInlineError(err.message || 'Verification failure.');
+    }
+  };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
   };
 
   return (
@@ -53,7 +188,6 @@ export default function GlaidoProfilePage({ onBack }: GlaidoProfilePageProps) {
       {/* 1. TOP NAV / HEADER */}
       <header className="border-b border-[#252525] bg-[#0D0D0D]/90 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          {/* Custom SVG Logo */}
           <div className="flex items-center gap-2">
             <svg width="32" height="32" viewBox="0 0 82 82" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-6 w-auto">
               <path d="M65.9202 27.3358H29.9063C28.5227 27.3358 27.401 28.4546 27.401 29.8348V38.5815C27.401 39.9617 28.5227 41.0805 29.9063 41.0805H66.2274C67.3794 41.0805 68.3372 41.9653 68.4255 43.111V65.7586C68.4255 67.1388 69.5472 68.2577 70.9308 68.2577H79.5429C80.9265 68.2577 82.0482 67.1388 82.0482 65.7586V43.5796C82.0482 42.1994 80.9265 41.0805 79.5429 41.0805H71.0874C69.6173 41.0805 68.4255 39.8917 68.4255 38.4253V29.8348C68.4255 28.4546 67.3039 27.3358 65.9202 27.3358Z" fill="#BFF549"/>
@@ -66,6 +200,12 @@ export default function GlaidoProfilePage({ onBack }: GlaidoProfilePageProps) {
         </div>
         
         <div className="flex items-center gap-4">
+          {user && (
+            <span className="text-[10px] font-mono text-[#BFF549] hidden md:flex items-center gap-1.5 bg-[#BFF549]/10 border border-[#BFF549]/20 px-2.5 py-1">
+              <UserCheck size={10} />
+              SYNCED: {user.email}
+            </span>
+          )}
           <button onClick={onBack} className="bg-transparent text-[#B6B6B6] border border-[#252525] font-bold text-xs px-4 py-2 rounded-[2px] hover:text-white hover:border-[#BFF549] transition-all flex items-center gap-2 cursor-pointer">
             <Coffee size={14} className="text-[#BFF549]" />
             <span>Go to Portal</span>
@@ -73,40 +213,36 @@ export default function GlaidoProfilePage({ onBack }: GlaidoProfilePageProps) {
         </div>
       </header>
 
-      {/* 2. PROFILE BANNER HERO WITH GLOW AND BACKGROUND OVERLAY */}
+      {/* 2. PROFILE BANNER HERO WITH GLOW */}
       <section className="relative h-64 w-full bg-[#080808] border-b border-[#252525] overflow-hidden flex items-end">
-        {/* Deep background mesh overlay */}
         <div className="absolute inset-0 bg-gradient-to-t from-[#0D0D0D] via-[#0D0D0D]/60 to-transparent z-0" />
         <div className="absolute top-1/2 right-1/4 -translate-y-1/2 w-96 h-96 rounded-full bg-[#BFF549]/10 blur-[120px] pointer-events-none z-0" />
         
-        {/* Content Overlay */}
         <div className="w-full max-w-5xl mx-auto px-6 pb-6 flex flex-col sm:flex-row items-start sm:items-end gap-6 z-10">
-          
-          {/* Avatar Container with Lime Green sharp border */}
           <div className="w-28 h-28 bg-[#161616] border border-[#BFF549] p-1 rounded-none flex items-center justify-center shrink-0 shadow-lg">
             <div className="w-full h-full bg-[#252525] rounded-none overflow-hidden flex items-center justify-center text-[#BFF549]">
               <Coffee size={44} />
             </div>
           </div>
 
-          <div className="flex-1 pb-2">
+          <div className="flex-1 pb-2 text-left">
             <div className="flex flex-wrap items-center gap-3">
               <h2 className="text-3xl font-bold tracking-tight">{profileName}</h2>
               <span className="bg-[#BFF549]/10 text-[#BFF549] border border-[#BFF549]/30 text-[10px] uppercase tracking-widest px-2 py-0.5 rounded-none font-bold">
-                Roast Master
+                {user ? 'Authenticated Barista' : 'Guest Operator'}
               </span>
             </div>
             <p className="text-[#B6B6B6] text-sm mt-1 font-mono">{profileEmail}</p>
           </div>
 
-          <div className="pb-2">
-            <span className="text-[#B6B6B6] text-xs uppercase font-bold tracking-widest block text-left sm:text-right">Extraction Tier</span>
+          <div className="pb-2 text-left sm:text-right">
+            <span className="text-[#B6B6B6] text-xs uppercase font-bold tracking-widest block">Extraction Tier</span>
             <span className="text-[#BFF549] text-2xl font-bold tracking-wider">PREMIUM 22% EY</span>
           </div>
         </div>
       </section>
 
-      {/* 3. MAIN CONTENT CONTAINER */}
+      {/* 3. MAIN CONTENT */}
       <main className="flex-1 w-full max-w-5xl mx-auto px-6 py-10 flex flex-col md:flex-row gap-8">
         
         {/* SIDEBAR NAVIGATION */}
@@ -156,8 +292,23 @@ export default function GlaidoProfilePage({ onBack }: GlaidoProfilePageProps) {
             <ArrowRight size={12} className={activeTab === 'integrations' ? 'opacity-100' : 'opacity-0'} />
           </button>
 
+          <button 
+            onClick={() => setActiveTab('calculator')}
+            className={`w-full text-left text-xs font-bold uppercase tracking-wider px-4 py-3 rounded-[2px] transition-all flex items-center justify-between cursor-pointer ${
+              activeTab === 'calculator' 
+                ? 'bg-[#BFF549] text-black' 
+                : 'bg-[#161616] text-[#B6B6B6] border border-[#252525] hover:text-white hover:border-[#BFF549]'
+            }`}
+          >
+            <span className="flex items-center gap-2">
+              <Calculator size={14} />
+              Caloric & Gear-Up Calibration
+            </span>
+            <ArrowRight size={12} className={activeTab === 'calculator' ? 'opacity-100' : 'opacity-0'} />
+          </button>
+
           <div className="border-t border-[#252525] my-6 pt-6 flex flex-col gap-3">
-            <div className="bg-[#161616] border border-[#252525] rounded-none p-4">
+            <div className="bg-[#161616] border border-[#252525] rounded-none p-4 text-left">
               <span className="text-[#B6B6B6] text-[10px] uppercase font-bold tracking-widest block mb-1">Scale Connection</span>
               <div className="flex items-center gap-2">
                 <div className="w-2.5 h-2.5 bg-[#BFF549] animate-pulse rounded-full" />
@@ -165,10 +316,15 @@ export default function GlaidoProfilePage({ onBack }: GlaidoProfilePageProps) {
               </div>
             </div>
 
-            <button className="w-full bg-[#161616] border border-[#252525] text-red-400 text-xs font-bold uppercase tracking-wider px-4 py-3 rounded-[2px] hover:bg-red-950/20 hover:border-red-900 transition-all flex items-center gap-2 justify-center cursor-pointer">
-              <LogOut size={14} />
-              Disconnect Setup
-            </button>
+            {user && (
+              <button 
+                onClick={handleSignOut}
+                className="w-full bg-[#161616] border border-[#252525] text-red-400 text-xs font-bold uppercase tracking-wider px-4 py-3 rounded-[2px] hover:bg-red-950/20 hover:border-red-900 transition-all flex items-center gap-2 justify-center cursor-pointer"
+              >
+                <LogOut size={14} />
+                Disconnect Session
+              </button>
+            )}
           </div>
         </aside>
 
@@ -177,7 +333,7 @@ export default function GlaidoProfilePage({ onBack }: GlaidoProfilePageProps) {
           
           {/* TAB 1: ROAST PARAMETERS */}
           {activeTab === 'profile' && (
-            <div className="flex flex-col gap-6 animate-fadeIn">
+            <div className="flex flex-col gap-6 animate-fadeIn text-left">
               <div>
                 <h3 className="text-xl font-bold uppercase tracking-tight">Extraction Configuration</h3>
                 <p className="text-[#B6B6B6] text-xs mt-1">Adjust target temperature metrics and default brewing methods.</p>
@@ -255,7 +411,7 @@ export default function GlaidoProfilePage({ onBack }: GlaidoProfilePageProps) {
                   <button 
                     type="button"
                     onClick={() => {
-                      setProfileName('ANC');
+                      setProfileName(user ? user.email.split('@')[0].toUpperCase() : 'ANC');
                       setBrewMethod('Espresso (declining pressure)');
                       setTargetTemp(93);
                     }}
@@ -277,7 +433,7 @@ export default function GlaidoProfilePage({ onBack }: GlaidoProfilePageProps) {
 
           {/* TAB 2: EXTRACTION TELEMETRY */}
           {activeTab === 'usage' && (
-            <div className="flex flex-col gap-6 animate-fadeIn">
+            <div className="flex flex-col gap-6 animate-fadeIn text-left">
               <div>
                 <h3 className="text-xl font-bold uppercase tracking-tight">Solubles Telemetry</h3>
                 <p className="text-[#B6B6B6] text-xs mt-1">Real-time diagnostics from your synced Acaia scales and refractometer.</p>
@@ -311,7 +467,7 @@ export default function GlaidoProfilePage({ onBack }: GlaidoProfilePageProps) {
                 />
               </div>
 
-              {/* Progress bar and speed benchmark */}
+              {/* Progress bar */}
               <div className="border-t border-[#252525] pt-6 flex flex-col gap-3">
                 <span className="text-[#B6B6B6] text-[10px] uppercase font-bold tracking-widest">Active Extraction Consistency</span>
                 <div className="w-full bg-[#1A1A1A] h-2.5 rounded-none border border-[#252525]">
@@ -327,7 +483,7 @@ export default function GlaidoProfilePage({ onBack }: GlaidoProfilePageProps) {
 
           {/* TAB 3: HARDWARE SCALE SYNC */}
           {activeTab === 'integrations' && (
-            <div className="flex flex-col gap-6 animate-fadeIn">
+            <div className="flex flex-col gap-6 animate-fadeIn text-left">
               <div>
                 <h3 className="text-xl font-bold uppercase tracking-tight">Machine Hardware Sync</h3>
                 <p className="text-[#B6B6B6] text-xs mt-1">Connect your Glaido engine directly to high-end smart scale weight metrics.</p>
@@ -374,6 +530,215 @@ export default function GlaidoProfilePage({ onBack }: GlaidoProfilePageProps) {
               </div>
             </div>
           )}
+
+          {/* TAB 4: BARISTA CALORIE & GEAR-UP CALCULATOR */}
+          {activeTab === 'calculator' && (
+            <div className="flex flex-col gap-6 animate-fadeIn text-left">
+              <div>
+                <h3 className="text-xl font-bold uppercase tracking-tight flex items-center gap-2">
+                  <Calculator className="text-[#BFF549]" size={22} />
+                  Caloric &amp; Gear-Up Calibration
+                </h3>
+                <p className="text-[#B6B6B6] text-xs mt-1">
+                  Compute daily metabolic barista caloric expenditure boosted by caffeine consumption, and determine recommended hardware calibration profiles.
+                </p>
+              </div>
+
+              {user ? (
+                // Authenticated Calculator Tab View
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                  
+                  {/* Left Column: Form */}
+                  <form onSubmit={handleCalculateAndLog} className="lg:col-span-6 flex flex-col gap-5 w-full">
+                    <div className="flex flex-col gap-2 w-full">
+                      <label htmlFor="weight" className="text-[#B6B6B6] text-[10px] font-bold uppercase tracking-widest">
+                        Barista Weight (kg)
+                      </label>
+                      <input
+                        id="weight"
+                        type="number"
+                        min="40"
+                        max="150"
+                        value={weight}
+                        onChange={(e) => setWeight(Number(e.target.value))}
+                        className="bg-[#161616] text-white border border-[#252525] rounded-none px-4 py-3 text-sm focus:outline-none focus:border-[#BFF549] font-mono"
+                        required
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-2 w-full">
+                      <label htmlFor="cups" className="text-[#B6B6B6] text-[10px] font-bold uppercase tracking-widest">
+                        Daily Coffee Consumption (cups)
+                      </label>
+                      <input
+                        id="cups"
+                        type="number"
+                        min="0"
+                        max="12"
+                        value={cups}
+                        onChange={(e) => setCups(Number(e.target.value))}
+                        className="bg-[#161616] text-white border border-[#252525] rounded-none px-4 py-3 text-sm focus:outline-none focus:border-[#BFF549] font-mono"
+                        required
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-2 w-full">
+                      <label htmlFor="activity" className="text-[#B6B6B6] text-[10px] font-bold uppercase tracking-widest">
+                        Barista Activity &amp; Stress Level
+                      </label>
+                      <select
+                        id="activity"
+                        value={activity}
+                        onChange={(e) => setActivity(e.target.value)}
+                        className="bg-[#161616] text-white border border-[#252525] rounded-none px-4 py-3 text-sm focus:outline-none focus:border-[#BFF549] font-mono appearance-none"
+                      >
+                        <option value="sedentary">Sedentary (Lab Research Only)</option>
+                        <option value="active">Active (Standard Espresso Bar)</option>
+                        <option value="peak">Peak (High Volume Barista Speed)</option>
+                        <option value="overclocked">Overclocked (Extensive Extractor Calibration)</option>
+                      </select>
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="bg-[#BFF549] text-black font-bold text-xs uppercase tracking-wider py-3.5 rounded-[2px] hover:bg-[#A6D83F] transition-all cursor-pointer flex items-center justify-center gap-2"
+                    >
+                      <Zap size={14} />
+                      Compute &amp; Log Telemetry
+                    </button>
+                  </form>
+
+                  {/* Right Column: Dynamic Output Results & History */}
+                  <div className="lg:col-span-6 flex flex-col gap-6">
+                    {calculationSuccess && (
+                      <div className="bg-[#161616] border border-[#BFF549] p-5 relative">
+                        <div className="absolute top-0 right-0 bg-[#BFF549] text-black font-mono font-bold text-[9px] uppercase tracking-wider px-2 py-0.5">
+                          Synced to Cloud
+                        </div>
+                        <h4 className="text-xs font-mono font-bold text-[#BFF549] uppercase tracking-widest mb-3">Calculated Output Profile</h4>
+                        
+                        <div className="flex flex-col gap-3">
+                          <div className="flex justify-between border-b border-[#252525] pb-2">
+                            <span className="text-[#B6B6B6] text-xs">Total Metabolic Expenditure</span>
+                            <span className="font-mono font-bold text-white text-sm">{computedCalories} kcal / day</span>
+                          </div>
+                          
+                          <div className="flex justify-between border-b border-[#252525] pb-2">
+                            <span className="text-[#B6B6B6] text-xs">Bloodstream Caffeine Peak</span>
+                            <span className="font-mono font-bold text-white text-sm">{computedCaffeine} mg</span>
+                          </div>
+
+                          <div className="flex flex-col text-left pt-1">
+                            <span className="text-[#B6B6B6] text-[10px] uppercase font-bold tracking-widest font-mono block mb-1">Suggested Hardware Configuration</span>
+                            <span className="text-xs font-bold text-[#BFF549] leading-relaxed">{gearRecommendation}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Historical Calibration Logs from Supabase */}
+                    <div className="flex flex-col gap-3 border-t border-[#252525] pt-4">
+                      <span className="text-xs font-mono font-bold uppercase text-[#B6B6B6] flex items-center gap-1.5">
+                        <History size={12} className="text-[#BFF549]" />
+                        Historical Calibration Logs ({calcHistory.length})
+                      </span>
+
+                      {calcHistory.length > 0 ? (
+                        <div className="max-h-[220px] overflow-y-auto border border-[#252525] bg-[#0A0A0A]">
+                          <table className="w-full text-left text-[11px] font-mono text-[#B6B6B6]">
+                            <thead>
+                              <tr className="border-b border-[#252525] bg-[#121212] text-white">
+                                <th className="p-2 font-bold uppercase">Date</th>
+                                <th className="p-2 font-bold uppercase">Weight</th>
+                                <th className="p-2 font-bold uppercase">Cups</th>
+                                <th className="p-2 font-bold uppercase">Kcal</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {calcHistory.map((log) => (
+                                <tr key={log.id} className="border-b border-[#252525]/50 hover:bg-[#161616]">
+                                  <td className="p-2">{new Date(log.created_at).toLocaleDateString()}</td>
+                                  <td className="p-2">{log.weight}kg</td>
+                                  <td className="p-2">{log.coffee_cups} cups</td>
+                                  <td className="p-2 text-[#BFF549] font-bold">{log.calories_burn}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : (
+                        <div className="bg-[#121212] border border-[#252525] p-6 text-center text-xs text-[#B6B6B6] font-mono">
+                          No logged calculations found in Supabase.
+                        </div>
+                      )}
+                    </div>
+
+                  </div>
+
+                </div>
+              ) : (
+                // Unauthenticated locked message with inline sign-in
+                <div className="bg-[#161616] border border-[#252525] p-8 text-center flex flex-col items-center gap-6 relative">
+                  <div className="w-16 h-16 rounded-none bg-[#252525] border border-[#252525] flex items-center justify-center text-[#BFF549] mb-2">
+                    <Lock size={32} />
+                  </div>
+                  
+                  <div className="max-w-md">
+                    <h4 className="text-lg font-bold uppercase tracking-tight text-white">Caloric Metabolism Lock</h4>
+                    <p className="text-[#B6B6B6] text-xs leading-relaxed mt-2">
+                      Authenticate your Barista credentials to unlock the Caloric Metabolism and Profile Gear-Up Telemetry logger. Logs are securely synchronized in real time to your active Supabase database.
+                    </p>
+                  </div>
+
+                  {/* Inline Auth Form */}
+                  <form onSubmit={handleInlineLogin} className="w-full max-w-sm border-t border-[#252525] pt-6 flex flex-col gap-4 mt-2">
+                    <span className="text-[10px] font-mono font-bold text-[#BFF549] uppercase tracking-widest block text-left">
+                      Inline Verification
+                    </span>
+
+                    {inlineError && (
+                      <div className="bg-red-950/20 border border-red-800 text-red-400 text-xs font-mono p-3 text-left">
+                        Error: {inlineError}
+                      </div>
+                    )}
+
+                    <div className="flex flex-col gap-1 text-left">
+                      <label className="text-[#B6B6B6] text-[9px] uppercase font-bold tracking-widest font-mono">Barista Email</label>
+                      <input 
+                        type="email" 
+                        placeholder="name@glaido.com"
+                        value={inlineEmail}
+                        onChange={(e) => setInlineEmail(e.target.value)}
+                        className="bg-[#080808] border border-[#252525] text-white text-sm p-3 focus:outline-none focus:border-[#BFF549] rounded-none font-mono"
+                        required
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1 text-left">
+                      <label className="text-[#B6B6B6] text-[9px] uppercase font-bold tracking-widest font-mono">Access Cryptokey</label>
+                      <input 
+                        type="password" 
+                        placeholder="••••••••"
+                        value={inlinePassword}
+                        onChange={(e) => setInlinePassword(e.target.value)}
+                        className="bg-[#080808] border border-[#252525] text-white text-sm p-3 focus:outline-none focus:border-[#BFF549] rounded-none font-mono"
+                        required
+                      />
+                    </div>
+
+                    <button 
+                      type="submit"
+                      className="bg-[#BFF549] text-black font-bold text-xs uppercase tracking-wider py-3 rounded-[2px] hover:bg-[#A6D83F] transition-all cursor-pointer mt-1"
+                    >
+                      Authenticate Operator
+                    </button>
+                  </form>
+
+                </div>
+              )}
+
+            </div>
+          )}
           
         </section>
 
@@ -408,7 +773,7 @@ function StatsCard({ icon, label, value, change }: StatsCardProps) {
 function IntegrationRow({ name, desc, connected }: IntegrationRowProps) {
   return (
     <div className="bg-[#161616] border border-[#252525] p-4 rounded-none flex items-center justify-between gap-4">
-      <div>
+      <div className="text-left">
         <h4 className="text-sm font-bold uppercase tracking-wider text-white">{name}</h4>
         <p className="text-[#B6B6B6] text-xs mt-0.5">{desc}</p>
       </div>
