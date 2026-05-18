@@ -1,14 +1,14 @@
 ---
 name: brand-identity
-description: Provides the single source of truth for the Glaido brand guidelines, design tokens, technology choices, voice/tone, and assets. Use this skill whenever generating UI components, styling applications, writing copy, or creating user-facing assets for Glaido to ensure brand consistency.
+description: Provides the single source of truth for the Sultan's Parlour brand guidelines, design tokens, technology choices, voice/tone, and assets. Use this skill whenever generating UI components, styling applications, writing copy, or creating user-facing assets for Sultan's Parlour to ensure brand consistency.
 ---
 
-# Brand Identity & Guidelines (Glaido)
+# Brand Identity & Guidelines (Sultan's Parlour)
 
-**Brand Name:** Glaido  
+**Brand Name:** Sultan's Parlour  
 **Vibe:** Ultra-Modern, High Energy, Elite Obsidian  
 
-This skill defines the core visual design and technical constraints for Glaido. Adhere to these guidelines strictly to maintain consistency.
+This skill defines the core visual design and technical constraints for Sultan's Parlour. Adhere to these guidelines strictly to maintain consistency.
 
 ## Reference Documentation
 
@@ -36,6 +36,5 @@ If you are writing marketing copy, error messages, documentation, or user-facing
 👉 **[`resources/voice-tone.md`](resources/voice-tone.md)**
 
 ### For Brand Assets & Logos
-The official Glaido logo is available in SVG format:
-👉 **[`resources/logo.svg`](resources/logo.svg)**
+The official Sultan's Parlour logo is available in PNG format:
 👉 **[`resources/logo.png`](resources/logo.png)**

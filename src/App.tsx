@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import LandingPage from './components/LandingPage';
-import GlaidoProfilePage from './components/GlaidoProfilePage';
+import Sultan's ParlourProfilePage from './components/Sultan's ParlourProfilePage';
 import { supabase } from './lib/supabaseClient';
 
 export default function App() {
@@ -30,7 +30,7 @@ export default function App() {
           onEnterPortal={() => setView('portal')} 
         />
       ) : (
-        <GlaidoProfilePage 
+        <Sultan's ParlourProfilePage 
           user={user} 
           onBack={() => setView('landing')} 
         />

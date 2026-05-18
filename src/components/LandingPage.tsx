@@ -51,7 +51,7 @@ const ROASTS_DATA: Record<CoffeeRoast, RoastSettings> = {
     description: "Dense, hard bean structure. Responds best to flat 9 bar pressure after a prolonged pre-infusion hold to fully saturate the puck."
   },
   obsidian: {
-    name: "Glaido Obsidian Dark Blend",
+    name: "Sultan's Parlour Obsidian Dark Blend",
     roastLevel: "Elite Medium-Dark (High Caramel)",
     recommendedTemp: 89,
     pressureProfile: "Low Temp Lever Profile (6 bar peak)",
@@ -142,11 +142,8 @@ export default function LandingPage({ user, onEnterPortal }: LandingPageProps) {
       <header className="border-b border-[#252525] bg-[#0D0D0D]/90 backdrop-blur-md sticky top-0 z-50 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <svg width="32" height="32" viewBox="0 0 82 82" fill="none" xmlns="http://www.w3.org/2000/svg" className="h-6 w-auto">
-              <path d="M65.9202 27.3358H29.9063C28.5227 27.3358 27.401 28.4546 27.401 29.8348V38.5815C27.401 39.9617 28.5227 41.0805 29.9063 41.0805H66.2274C67.3794 41.0805 68.3372 41.9653 68.4255 43.111V65.7586C68.4255 67.1388 69.5472 68.2577 70.9308 68.2577H79.5429C80.9265 68.2577 82.0482 67.1388 82.0482 65.7586V43.5796C82.0482 42.1994 80.9265 41.0805 79.5429 41.0805H71.0874C69.6173 41.0805 68.4255 39.8917 68.4255 38.4253V29.8348C68.4255 28.4546 67.3039 27.3358 65.9202 27.3358Z" fill="#BFF549"/>
-              <path d="M54.9604 65.9124V57.1657C54.9604 55.7855 53.8387 54.6667 52.455 54.6667H23.3307C17.9691 54.6667 13.6227 50.3311 13.6227 44.9829V17.4933C13.6227 15.4231 15.3052 13.7448 17.3806 13.7448H65.7645C67.1482 13.7448 68.2698 12.6259 68.2698 11.2457V2.49905C68.2698 1.11886 67.1482 0 65.7645 0H17.5372C7.85167 0 0 7.83203 0 17.4933V45.3504C0 51.3155 2.37557 57.0363 6.60411 61.2543L27.4019 82V70.9105C27.4019 69.5303 28.5226 68.4114 29.9072 68.4114H52.455C53.8387 68.4114 54.9604 67.2926 54.9604 65.9124Z" fill="#BFF549"/>
-            </svg>
-            <span className="font-bold text-xl uppercase tracking-wider font-sans">Glaido</span>
+            <img src="/brand-identity/resources/logo.png" alt="Sultan's Parlour Logo" className="h-8 w-auto rounded-md shadow-lg border border-[#BFF549]/20" />
+            <span className="font-bold text-xl uppercase tracking-wider font-sans">Sultan's Parlour</span>
           </div>
           <span className="text-[#252525] font-light">/</span>
           <span className="text-[#B6B6B6] text-xs uppercase tracking-widest font-mono">Espresso Lab</span>
@@ -211,7 +208,7 @@ export default function LandingPage({ user, onEnterPortal }: LandingPageProps) {
               
               <img 
                 src="/brand-identity/resources/visual-inspiration.png" 
-                alt="Glaido Visual Paradigm"
+                alt="Sultan's Parlour Visual Paradigm"
                 className="w-full h-full object-cover filter brightness-[0.7] contrast-[1.1] grayscale hover:grayscale-0 group-hover:scale-102 transition-all duration-700 ease-in-out"
               />
               
@@ -233,7 +230,7 @@ export default function LandingPage({ user, onEnterPortal }: LandingPageProps) {
             </h1>
             <p className="text-[#B6B6B6] text-sm md:text-base leading-relaxed max-w-xl">
               Professional pressure-profiling extraction frameworks engineered for elite coffee density. 
-              Glaido connects real-time solubles telemetry with smart-scale weight feedback loops to deliver 
+              Sultan's Parlour connects real-time solubles telemetry with smart-scale weight feedback loops to deliver 
               unparalleled extraction yield consistency.
             </p>
             
@@ -283,7 +280,7 @@ export default function LandingPage({ user, onEnterPortal }: LandingPageProps) {
               <div className="flex justify-between items-center border-b border-[#252525] pb-4">
                 <span className="text-xs font-mono font-bold uppercase text-[#B6B6B6] flex items-center gap-1.5">
                   <Cpu size={12} className="text-[#BFF549]" />
-                  Glaido Simulator V2
+                  Sultan's Parlour Simulator V2
                 </span>
                 <span className="text-[#BFF549] text-[10px] font-mono uppercase font-bold bg-[#BFF549]/10 px-2 py-0.5">
                   Online
@@ -450,7 +447,7 @@ export default function LandingPage({ user, onEnterPortal }: LandingPageProps) {
                     : 'bg-[#121212] text-[#B6B6B6] border border-[#252525] hover:text-white hover:border-[#BFF549]'
                 }`}
               >
-                <span>Glaido Obsidian Dark</span>
+                <span>Sultan's Parlour Obsidian Dark</span>
                 <ChevronRight size={14} />
               </button>
             </div>
@@ -527,7 +524,7 @@ export default function LandingPage({ user, onEnterPortal }: LandingPageProps) {
       {/* 5. FOOTER */}
       <footer className="border-t border-[#252525] py-12 text-center text-[#B6B6B6] text-xs font-mono bg-[#0D0D0D]">
         <div className="max-w-5xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-          <p>© {new Date().getFullYear()} Glaido Inc. High-Performance Coffee Extraction Infrastructure.</p>
+          <p>© {new Date().getFullYear()} Sultan's Parlour Inc. High-Performance Coffee Extraction Infrastructure.</p>
           <div className="flex gap-6">
             <span className="hover:text-white cursor-pointer transition-colors">Documentation</span>
             <span className="hover:text-white cursor-pointer transition-colors">API Logs</span>
@@ -548,7 +545,7 @@ export default function LandingPage({ user, onEnterPortal }: LandingPageProps) {
             <div className="flex justify-between items-center border-b border-[#252525] pb-4 mb-6">
               <span className="text-xs font-mono font-bold uppercase text-[#B6B6B6] flex items-center gap-1.5">
                 <Coffee size={12} className="text-[#BFF549]" />
-                {authMode === 'signin' ? 'Barista Authentication' : 'Create Glaido Account'}
+                {authMode === 'signin' ? 'Barista Authentication' : 'Create Sultan's Parlour Account'}
               </span>
               <button 
                 onClick={() => {
@@ -578,7 +575,7 @@ export default function LandingPage({ user, onEnterPortal }: LandingPageProps) {
                 <label className="text-[#B6B6B6] text-[9px] uppercase font-bold tracking-widest font-mono">Barista Email</label>
                 <input 
                   type="email" 
-                  placeholder="name@glaido.com"
+                  placeholder="name@Sultan's Parlour.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="bg-[#080808] border border-[#252525] text-white text-sm p-3 focus:outline-none focus:border-[#BFF549] rounded-none font-mono"

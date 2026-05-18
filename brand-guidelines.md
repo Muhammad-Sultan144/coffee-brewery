@@ -1,7 +1,7 @@
-# 💎 Glaido Brand Identity & Design System
-> The Official Project Constitution for Glaido's Visual Identity, Typography, Components, and Tech Stack.
+# 💎 Sultan's Parlour Brand Identity & Design System
+> The Official Project Constitution for Sultan's Parlour's Visual Identity, Typography, Components, and Tech Stack.
 
-**Brand Name:** Glaido  
+**Brand Name:** Sultan's Parlour  
 **Design Theme:** Ultra-Modern, High Energy, Elite Obsidian  
 **Target Audience:** Tech-savvy individuals seeking high-performance, efficient dictation solutions.  
 
@@ -121,10 +121,9 @@ export const FormInput: React.FC<{ label: string; placeholder: string; id: strin
 
 ## 🛡️ 5. Brand Logo Assets
 
-The Glaido brand logo is a modern, custom geometric SVG. It features a lime-green "G" symbol paired with clean white lettering.
+The Sultan's Parlour brand logo is a premium, 3D signature PNG. It features elegantly blended cursive initials 'S' and 'P' intricately layered over a coffee cup in a stunning dark mode setup.
 
-- **SVG Path:** [`brand-identity/resources/logo.svg`](brand-identity/resources/logo.svg)
-- **PNG Alt Path:** [`brand-identity/resources/logo.png`](brand-identity/resources/logo.png)
+- **Logo Path:** [`brand-identity/resources/logo.png`](brand-identity/resources/logo.png)
 
 ```tsx
 import React from 'react';
@@ -132,8 +131,8 @@ import React from 'react';
 export const BrandLogo: React.FC<{ className?: string }> = ({ className = "h-6 w-auto" }) => {
   return (
     <img
-      src="/brand-identity/resources/logo.svg"
-      alt="Glaido Logo"
+      src="/brand-identity/resources/logo.png"
+      alt="Sultan's Parlour Logo"
       className={className}
     />
   );
