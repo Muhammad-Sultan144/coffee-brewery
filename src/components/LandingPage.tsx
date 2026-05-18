@@ -6,6 +6,7 @@ import {
   Gauge, 
   RotateCw, 
   Thermometer, 
+  Sparkles,
   ChevronRight,
   LogOut,
   UserCheck
