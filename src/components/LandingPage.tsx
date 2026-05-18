@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { 
   Coffee, 
   ArrowRight, 
@@ -6,8 +6,6 @@ import {
   Gauge, 
   RotateCw, 
   Thermometer, 
-  Sparkles,
-  Zap,
   ChevronRight,
   LogOut,
   UserCheck
