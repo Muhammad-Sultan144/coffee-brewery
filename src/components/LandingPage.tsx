@@ -545,7 +545,7 @@ export default function LandingPage({ user, onEnterPortal }: LandingPageProps) {
             <div className="flex justify-between items-center border-b border-[#252525] pb-4 mb-6">
               <span className="text-xs font-mono font-bold uppercase text-[#B6B6B6] flex items-center gap-1.5">
                 <Coffee size={12} className="text-[#BFF549]" />
-                {authMode === 'signin' ? 'Barista Authentication' : 'Create Sultan's Parlour Account'}
+                {authMode === 'signin' ? 'Barista Authentication' : "Create Sultan's Parlour Account"}
               </span>
               <button 
                 onClick={() => {

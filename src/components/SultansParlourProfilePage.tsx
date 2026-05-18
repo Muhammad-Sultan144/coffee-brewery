@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 
-interface Sultan's ParlourProfilePageProps {
+interface SultansParlourProfilePageProps {
   user: any;
   onBack: () => void;
 }
@@ -47,10 +47,10 @@ interface BaristaCalculation {
   created_at: string;
 }
 
-export default function Sultan's ParlourProfilePage({ user, onBack }: Sultan's ParlourProfilePageProps) {
+export default function SultansParlourProfilePage({ user, onBack }: SultansParlourProfilePageProps) {
   const [activeTab, setActiveTab] = useState<'profile' | 'usage' | 'integrations' | 'calculator'>('profile');
   const [profileName, setProfileName] = useState(user ? user.email.split('@')[0].toUpperCase() : 'ANC');
-  const [profileEmail, setProfileEmail] = useState(user ? user.email : 'coffee.enthusiast@Sultan's Parlour.com');
+  const [profileEmail, setProfileEmail] = useState(user ? user.email : "coffee.enthusiast@sultansparlour.com");
   const [targetTemp, setTargetTemp] = useState<number>(93); // Celsius
   const [brewMethod, setBrewMethod] = useState('Espresso (declining pressure)');
   const [isSaved, setIsSaved] = useState(false);
@@ -77,7 +77,7 @@ export default function Sultan's ParlourProfilePage({ user, onBack }: Sultan's P
       setProfileEmail(user.email);
     } else {
       setProfileName('ANC');
-      setProfileEmail('coffee.enthusiast@Sultan's Parlour.com');
+      setProfileEmail("coffee.enthusiast@sultansparlour.com");
     }
   }, [user]);
 
